@@ -470,14 +470,28 @@ while True:
         if event.type == MOUSEBUTTONDOWN:
             mpos = pygame.mouse.get_pos()
             bpos = [int(mpos[0] / 50), int(mpos[1] / 50)]
-            if bpos in move_options:
+            if board.board[bpos[0]][bpos[1]].identification == "P":
+                PromotePiece = board.board[bpos[0]][bpos[1]]
+                if mpos[0] - bpos[0] * 50 <= 25:
+                    if mpos[1] - bpos[1] * 50 <= 25:
+                        board.board[bpos[0]][bpos[1]] = Queen(PromotePiece.color)
+                        move_options = []
+                    else:
+                        board.board[bpos[0]][bpos[1]] = Knight(PromotePiece.color)
+                        move_options = []
+                else:
+                    if mpos[1] - bpos[1] * 50 <= 25:
+                        board.board[bpos[0]][bpos[1]] = Rook(PromotePiece.color)
+                        move_options = []
+                    else:
+                        board.board[bpos[0]][bpos[1]] = Bishop(PromotePiece.color)
+                        move_options = []
+            elif bpos in move_options:
                 if clicked.identification == " ":
                     if clicked.color == "w":
                         if bpos[1] == 0:
-                            print ("I am a chicken")
                             board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
                             board.board[bpos[0]][bpos[1]] = PromoteSquare("w")
-                            print (board.board)
                             promotion_x = bpos[0]
                             promotion_query = True
                         else:
@@ -486,7 +500,7 @@ while True:
                             clicked = None
                             clicked_pos = None
                             move_options = []
-                    if clicked.color == "b":
+                    elif clicked.color == "b":
                         if bpos[1] == 7:
                             board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
                             board.board[bpos[0]][bpos[1]] = PromoteSquare("b")
@@ -510,18 +524,6 @@ while True:
                     clicked = None
                     clicked_pos = None
                     move_options = []
-            elif board.board[bpos[0]][bpos[1]].identification == "P":
-                PromotePiece = board.board[bpos[0]][bpos[1]]
-                if mpos[0] - bpos[0] * 50 <= 25:
-                    if mpos[1] - bpos[1] * 50 <= 25:
-                        board.board[bpos[0]][bpos[1]] = Queen(PromotePiece.color)
-                    else:
-                        board.board[bpos[0]][bpos[1]] = Rook(PromotePiece.color)
-                else:
-                    if mpos[1] - bpos[1] * 50 <= 25:
-                        board.board[bpos[0]][bpos[1]] = Knight(PromotePiece.color)
-                    else:
-                        board.board[bpos[0]][bpos[1]] = Bishop(PromotePiece.color)
             elif board.board[bpos[0]][bpos[1]].identification != "#":
                 clicked = board.board[bpos[0]][bpos[1]]
                 clicked_pos = bpos
