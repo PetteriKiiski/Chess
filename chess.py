@@ -81,8 +81,15 @@ class Piece:
 class Empty(Piece):
     def __init__(self):
         super().__init__()
+class PromoteSquare:
+    def __init__(self, color):
+        super().__init__()
+        self.identification = "P"
+        self.image = None #? No, not supposed to be this, though for now
+
 class Pawn(Piece):
     #Add en passant
+    #And promotion
     def __init__(self, Color):
         self.identification = " "
         self.color = Color
@@ -446,6 +453,9 @@ board = Board()
 clicked = None
 clicked_pos = None
 move_options = []
+promotion_query = False
+promotion_x = None
+promotion_color = None
 while True:
     board.displayBoard("w")
     for x in move_options:
@@ -458,6 +468,9 @@ while True:
             mpos = pygame.mouse.get_pos()
             bpos = [int(mpos[0] / 50), int(mpos[1] / 50)]
             if bpos in move_options:
+                if clicked.color == "w":
+                    if bpos[1] == 0:
+
                 board.board[bpos[0]][bpos[1]] = clicked
                 board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
                 clicked = None
