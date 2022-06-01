@@ -15,6 +15,8 @@ WhiteRook = pygame.image.load("WRook.png")
 WhiteQueen = pygame.image.load("WQueen.png")
 WhiteKing = pygame.image.load("WKing.png")
 MoveDot = pygame.image.load("MoveDot.png")
+BlackPromote = pygame.image.load("BPromote.png")
+WhitePromote = pygame.image.load("WPromote.png")
 canvas = pygame.display.set_mode((400, 400))
 pygame.display.set_caption("Chess")
 def GetPieceImage(img1, img2, color):
@@ -75,7 +77,7 @@ class Piece:
     def __init__(self):
         self.identification = "#"
         self.color = None
-        self.image = None
+        self.img = None
     def click(self, board, pos):
         pass
 class Empty(Piece):
@@ -83,10 +85,12 @@ class Empty(Piece):
         super().__init__()
 class PromoteSquare:
     def __init__(self, color):
-        super().__init__()
         self.identification = "P"
-        self.image = None #? No, not supposed to be this, though for now
-
+        if color == "w":
+            self.img = WhitePromote
+        else:
+            self.img = BlackPromote
+        self.color = color
 class Pawn(Piece):
     #Add en passant
     #And promotion
@@ -450,12 +454,11 @@ class King(Piece):
                     possible_pos.append([pos[0] - 1, pos[1] - 1])
         return possible_pos
 board = Board()
-clicked = None
+clicked = Empty()
 clicked_pos = None
 move_options = []
 promotion_query = False
 promotion_x = None
-promotion_color = None
 while True:
     board.displayBoard("w")
     for x in move_options:
@@ -468,14 +471,57 @@ while True:
             mpos = pygame.mouse.get_pos()
             bpos = [int(mpos[0] / 50), int(mpos[1] / 50)]
             if bpos in move_options:
-                if clicked.color == "w":
-                    if bpos[1] == 0:
-
-                board.board[bpos[0]][bpos[1]] = clicked
-                board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
-                clicked = None
-                clicked_pos = None
-                move_options = []
+                if clicked.identification == " ":
+                    if clicked.color == "w":
+                        if bpos[1] == 0:
+                            print ("I am a chicken")
+                            board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
+                            board.board[bpos[0]][bpos[1]] = PromoteSquare("w")
+                            print (board.board)
+                            promotion_x = bpos[0]
+                            promotion_query = True
+                        else:
+                            board.board[bpos[0]][bpos[1]] = clicked
+                            board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
+                            clicked = None
+                            clicked_pos = None
+                            move_options = []
+                    if clicked.color == "b":
+                        if bpos[1] == 7:
+                            board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
+                            board.board[bpos[0]][bpos[1]] = PromoteSquare("b")
+                            promotion_x = bpos[0]
+                            promotion_query = True
+                        else:
+                            board.board[bpos[0]][bpos[1]] = clicked
+                            board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
+                            clicked = None
+                            clicked_pos = None
+                            move_options = []
+                    else:
+                        board.board[bpos[0]][bpos[1]] = clicked
+                        board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
+                        clicked = None
+                        clicked_pos = None
+                        move_options = []
+                else:
+                    board.board[bpos[0]][bpos[1]] = clicked
+                    board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
+                    clicked = None
+                    clicked_pos = None
+                    move_options = []
+            elif board.board[bpos[0]][bpos[1]].identification == "P":
+                PromotePiece = board.board[bpos[0]][bpos[1]]
+                if mpos[0] - bpos[0] * 50 <= 25:
+                    if mpos[1] - bpos[1] * 50 <= 25:
+                        board.board[bpos[0]][bpos[1]] = Queen(PromotePiece.color)
+                    else:
+                        board.board[bpos[0]][bpos[1]] = Rook(PromotePiece.color)
+                else:
+                    if mpos[1] - bpos[1] * 50 <= 25:
+                        board.board[bpos[0]][bpos[1]] = Knight(PromotePiece.color)
+                    else:
+                        board.board[bpos[0]][bpos[1]] = Bishop(PromotePiece.color)
             elif board.board[bpos[0]][bpos[1]].identification != "#":
                 clicked = board.board[bpos[0]][bpos[1]]
                 clicked_pos = bpos
