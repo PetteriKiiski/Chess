@@ -93,11 +93,12 @@ class PromoteSquare:
         self.color = color
 class Pawn(Piece):
     #Add en passant
-    #And promotion
     def __init__(self, Color):
         self.identification = " "
         self.color = Color
         self.img = GetPieceImage(WhitePawn, BlackPawn, Color)
+        self.eat_enpassant = False
+        self.get_eaten_en_passant = False
     def click(self, board, pos):
         possible_pos = []
         if self.color == "w":
@@ -111,10 +112,24 @@ class Pawn(Piece):
                     if board[pos[0] - 1][pos[1] - 1].identification != "#":
                         if board[pos[0] - 1][pos[1] - 1].color != self.color:
                             possible_pos.append([pos[0] - 1, pos[1] - 1])
+                    else:
+                        if board[pos[0] - 1][pos[1]].identification == " ":
+                            if board[pos[0] - 1][pos[1]].color != self.color:
+                                if b_eaten_enpassant_pawn == board[pos[0] - 1][pos[1]]:
+                                    if w_enpassant_pawn == self:
+                                        possible_pos.append([pos[0] - 1, pos[1] - 1])
+
                 if pos[0] + 1 <= 7:
                     if board[pos[0] + 1][pos[1] - 1].identification != "#":
                         if board[pos[0] + 1][pos[1] - 1].color != self.color:
                             possible_pos.append([pos[0] + 1, pos[1] - 1])
+                    else:
+                        if board[pos[0] + 1][pos[1]].identification == " ":
+                            if board[pos[0] + 1][pos[1]].color != self.color:
+                                if b_eaten_enpassant_pawn == board[pos[0] + 1][pos[1]]:
+                                    if w_enpassant_pawn == self:
+                                        possible_pos.append([pos[0] + 1, pos[1] - 1])
+
                     
         else:
             if pos[1] + 1 <= 7:
@@ -127,10 +142,22 @@ class Pawn(Piece):
                     if board[pos[0] - 1][pos[1] + 1].identification != "#":
                         if board[pos[0] - 1][pos[1] + 1].color != self.color:
                             possible_pos.append([pos[0] - 1, pos[1] + 1])
+                    else:
+                        if board[pos[0] - 1][pos[1]].identification == " ":
+                            if board[pos[0] - 1][pos[1]].color != self.color:
+                                if w_eaten_enpassant_pawn == board[pos[0] - 1][pos[1]]:
+                                    if b_enpassant_pawn == self:
+                                        possible_pos.append([pos[0] - 1, pos[1] + 1])
                 if pos[0] + 1 <= 7:
                     if board[pos[0] + 1][pos[1] + 1].identification != "#":
                         if board[pos[0] + 1][pos[1] + 1].color != self.color:
                             possible_pos.append([pos[0] + 1, pos[1] + 1])
+                    else:
+                        if board[pos[0] + 1][pos[1]].identification == " ":
+                            if board[pos[0] + 1][pos[1]].color != self.color:
+                                if w_eaten_enpassant_pawn == board[pos[0] + 1][pos[1]]:
+                                    if b_enpassant_pawn == self:
+                                        possible_pos.append([pos[0] + 1, pos[1] + 1])
         return possible_pos
 class Knight(Piece):
     def __init__(self, Color):
@@ -459,6 +486,10 @@ clicked_pos = None
 move_options = []
 promotion_query = False
 promotion_x = None
+w_enpassant_pawn = None 
+w_eaten_enpassant_pawn = None
+b_enpassant_pawn = None
+b_eaten_enpassant_pawn = None
 while True:
     board.displayBoard("w")
     for x in move_options:
@@ -476,25 +507,42 @@ while True:
                     if mpos[1] - bpos[1] * 50 <= 25:
                         board.board[bpos[0]][bpos[1]] = Queen(PromotePiece.color)
                         move_options = []
+                        promotion_query = False
                     else:
                         board.board[bpos[0]][bpos[1]] = Knight(PromotePiece.color)
                         move_options = []
+                        promotion_query = False
                 else:
                     if mpos[1] - bpos[1] * 50 <= 25:
                         board.board[bpos[0]][bpos[1]] = Rook(PromotePiece.color)
                         move_options = []
+                        promotion_query = False
                     else:
                         board.board[bpos[0]][bpos[1]] = Bishop(PromotePiece.color)
                         move_options = []
-            elif bpos in move_options:
+                        promotion_query = False
+            elif bpos in move_options and not promotion_query:
                 if clicked.identification == " ":
                     if clicked.color == "w":
                         if bpos[1] == 0:
                             board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
                             board.board[bpos[0]][bpos[1]] = PromoteSquare("w")
-                            promotion_x = bpos[0]
                             promotion_query = True
                         else:
+                            if clicked_pos[1] == 6 and bpos[1] == 4:
+                                w_eaten_enpassant_pawn = clicked
+                                w_enpassant_pawn = None
+                            elif w_eaten_enpassant_pawn != None and clicked_pos[1] == 4 and bpos[1] == 3:
+                                w_eaten_enpassant_pawn = None
+                                w_enpassant_pawn = clicked
+                            else:
+                                if board.board[bpos[0]][bpos[1]].identification == "#":
+                                    if w_enpassant_pawn == clicked:
+                                        if w_enpassant_pawn in [board.board[bpos[0] - 1][bpos[1] + 1], board.board[bpos[0] + 1][bpos[1] + 1]]:
+                                            board.board[bpos[0]][bpos[1] + 1] = Empty()
+                                    w_eaten_enpassant_pawn = None
+                                    w_enpassant_pawn = None
+
                             board.board[bpos[0]][bpos[1]] = clicked
                             board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
                             clicked = None
@@ -504,9 +552,21 @@ while True:
                         if bpos[1] == 7:
                             board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
                             board.board[bpos[0]][bpos[1]] = PromoteSquare("b")
-                            promotion_x = bpos[0]
                             promotion_query = True
                         else:
+                            if clicked_pos[1] == 1 and bpos[1] == 3:
+                                b_eaten_enpassant_pawn = clicked
+                                b_enpassant_pawn = None
+                            elif b_eaten_enpassant_pawn != None and clicked_pos[1] == 3 and bpos[1] == 4:
+                                b_eaten_enpassant_pawn = None
+                                b_enpassant_pawn = clicked
+                            else:
+                                if board.board[bpos[0]][bpos[1]].identification == "#":
+                                    if b_enpassant_pawn == clicked:
+                                        if b_enpassant_pawn in [board.board[bpos[0] - 1][bpos[1] - 1], board.board[bpos[0] + 1][bpos[1] - 1]]:
+                                            board.board[bpos[0]][bpos[1] - 1] = Empty()
+                                b_eaten_enpassant_pawn = None
+                                b_enpassant_pawn = None
                             board.board[bpos[0]][bpos[1]] = clicked
                             board.board[clicked_pos[0]][clicked_pos[1]] = Empty()
                             clicked = None
@@ -524,7 +584,7 @@ while True:
                     clicked = None
                     clicked_pos = None
                     move_options = []
-            elif board.board[bpos[0]][bpos[1]].identification != "#":
+            elif board.board[bpos[0]][bpos[1]].identification != "#" and not promotion_query:
                 clicked = board.board[bpos[0]][bpos[1]]
                 clicked_pos = bpos
                 move_options = board.board[bpos[0]][bpos[1]].click(board.board, bpos)
